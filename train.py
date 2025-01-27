@@ -2,6 +2,9 @@ import pandas as pd
 import json
 import sys
 import random
+import signal
+import math
+
 
 # en python les objets DATAFRAME sont mutes par reference et pas par copie
 
@@ -10,12 +13,16 @@ EPOCH_NUM = 1_000
 LEARNING_RATE = 0.1
 
 
+def signal_handler(sig, frame):
+    print("You pressed Ctrl+C!")
+    sys.exit(0)
+
+
 def checkDataFrame(df):
     if set(df.columns) != expected_keys:
         print("ERROR: Wrong keys in the dataset.")
         return 0
     for column in df.columns:
-        # print(df[column])
         try:
             pd.to_numeric(df[column])
         except ValueError:
@@ -23,26 +30,29 @@ def checkDataFrame(df):
                 "ERROR: There are some columns in the dataset that contains none numeric values."
             )
             return 0
-
-    # if (df.dtypes['km'] != "int64" and df.dtypes['km'] != "float64") or (df.dtypes['price'] != 'int64' and df.dtypes['price'] != 'float64'):
-    #     return 0
     return 1
 
 
 def estimatePrice(tmpθ0, tmpθ1, mileage):
     return tmpθ1 * mileage + tmpθ0
 
+    # mean = df[column].mean()
+    # std = df[column].std()
+
 
 def standardize(df, column):
-    mean = df[column].mean()
-    std = df[column].std()
-    # formule de la normalisation par standardisation
-    # el = (el - moyenne) / ecart-type
+    nb_of_values = len(df[column])
+    total = sum([el for el in df[column]])
+    mean = total / nb_of_values
+    total_gaps = sum([(el - mean) ** 2 for el in df[column]])
+    std = math.sqrt((1 / nb_of_values) * total_gaps)
+
     df[column] = (df[column] - mean) / std
     return mean, std
 
 
 def main():
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         df = pd.read_csv("data.csv")
     except Exception as e:
@@ -58,24 +68,10 @@ def main():
     # on sauvegarde l'ancienne moyenne et ecart type pour denormaliser plus tard
     mean_km, std_km = standardize(df, "km")
     mean_price, std_price = standardize(df, "price")
-    print(df["km"])
-    print(df["price"])
-    print("moyennes:")
-    print(df["km"].mean())
-    print(df["price"].mean())
-
-    # print(mean_km)
-    # print(mean_price)
-    # print('ecarts types')
-    # print(df["km"].std())
-    # print(df["price"].std())
-    # print(std_km)
-    # print(std_price)
 
     tmpθ0 = random.random()
     tmpθ1 = random.random()
     m = len(df)  # 24
-    # print(m)
 
     for epoch in range(EPOCH_NUM):
         added_distance_0 = 0.0
