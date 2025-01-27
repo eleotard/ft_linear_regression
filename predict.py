@@ -1,6 +1,7 @@
 import json
 import signal
 import sys
+from train import estimate_price
 
 
 def signal_handler(sig, frame):
@@ -8,17 +9,9 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
-def check_user_input(input):
-    try:
-        _ = float(input)
-        return 1
-    except Exception as e:
-        print(f"ERROR: {e}")
-
-
 def main():
-    theta0 = 0.0
-    theta1 = 0.0
+    theta0 = 0
+    theta1 = 0
 
     signal.signal(signal.SIGINT, signal_handler)
     try:
@@ -30,11 +23,15 @@ def main():
         pass
 
     mileage = input("Enter a mileage: ")
-    while not check_user_input(mileage):
-        mileage = input("Enter a mileage: ")
-    mileage = float(mileage)
-    estimatePrice = theta0 + (theta1) * mileage
-    print(f"For a car with {mileage} mileages, the estimate price is : {estimatePrice}")
+    try:
+        mileage = float(mileage)
+    except Exception as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
+    estimated_price = estimate_price(theta0, theta1, mileage)
+    print(
+        f"For a car with {mileage} mileages, the estimate price is : {estimated_price:.2f}"
+    )
 
 
 if __name__ == "__main__":
