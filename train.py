@@ -4,6 +4,8 @@ import sys
 import random
 import signal
 import math
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 # en python les objets DATAFRAME sont mutes par reference et pas par copie
@@ -63,6 +65,14 @@ def main():
         sys.exit(1)
 
     df = df.dropna()
+    x = [x for x in df["km"]]
+    y = [y for y in df["price"]]
+    plt.scatter(x, y, label="stars", color="green", marker="*", s=30)
+    plt.xlabel("Mileage")
+    plt.ylabel("Price")
+    plt.title(
+        "Graph representing the evolution of a car price depending on its mileage"
+    )
 
     # standardisation par normalisation: permet de rendre les calculs plus stables
     # on sauvegarde l'ancienne moyenne et ecart type pour denormaliser plus tard
@@ -88,9 +98,6 @@ def main():
         tmpθ0 -= LEARNING_RATE * (added_distance_0 / m)
         tmpθ1 -= LEARNING_RATE * (added_distance_1 / m)
 
-    # theta1 = tmpθ1 * (std_price / std_km)
-    # theta0 = (tmpθ0 * std_price) + mean_price
-
     theta1 = tmpθ1 * (std_price / std_km)
     theta0 = (tmpθ0 * std_price) - (theta1 * mean_km) + mean_price
 
@@ -105,8 +112,11 @@ def main():
     with open("train_result.json", "w") as file:
         json.dump(data, file, indent=4)
 
+    x1 = np.arange(0, 250000, 0.1)
+    y1 = [theta1 * x + theta0 for x in x1]
+    plt.plot(x1, y1)
+    plt.show()
 
-# a la fin ecrit ses resultats dans un fichier temporaire
 
 if __name__ == "__main__":
     main()
